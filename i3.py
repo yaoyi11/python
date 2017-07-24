@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-import re
-import os
 import codecs
-from bs4 import BeautifulSoup
-from urllib.error import HTTPError,URLError
+import os
+import re
+from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
+
 import pymysql
+from bs4 import BeautifulSoup
 
 def getTitle(url):#获取网页标题
     try:
@@ -33,28 +34,30 @@ def getLinks(url):  #获取网页里所有的链接地址
         print("链接准备存入数据库...")
     return link
 
-def formatSize(bytes):# 字节bytes转化kb\M\G
-    try:
-        bytes = float(bytes)
-        kb = bytes / 1024
-    except:
-        print("传入的字节格式不对")
-        return "Error"
-
-    if kb >= 1024:
-        M = kb / 1024
-        if M >= 1024:
-            G = M / 1024
-            return "%.2fG" % (G)
-        else:
-            return "%.2fM" % (M)
+def nsfile(url):#将爬取到的网页以TXT形式存放到指定目录下
+    path = os.path.exists("D:\\testFile\\")#判断文件夹是否存在，如果不存在则创建
+    if path:
+        print("File Exist!")
     else:
-        return "%.2fkb" % (kb)
+        os.mkdir("D:\\testFile\\")
+
+    urlText = urlopen(url)
+    content = urlText.read()
+    title = getTitle(url)
+    filename = "D:\\testFile\\"+title+".txt"
+    fp = codecs.open(filename, "w+", "utf-8")  # 保存在文件夹下
+    content = content.decode('utf-8', 'ignore')
+    fp.write(content)
+    fp.close()
+    #生成文件
+    print("file"+":"+str(title)+".txt")
+    print("ALL Down")
+    return filename
 
 def getDocSize(path):# 获取文件大小
     try:
         size = os.path.getsize(path)
-        return formatSize(size)
+        return size
     except Exception as err:
         print(err)
 
@@ -76,18 +79,13 @@ def getmysql(title,size,link):#连接数据库并存储
         cur.close()
         conn.close()
 
-url = 'http://baike.baidu.com/item/Python'
-#url = input("请输入要访问的网址：")
-urlText = urlopen(url)
-content = urlText.read()
-fp = codecs.open("index.txt","w+","gb18030")#保存在文件夹下
-#content = content.decode('utf-8')
-content = content.decode('utf-8','ignore')
-fp.write(content)
-fp.close()
-size = getDocSize("index.txt")
-print("网页大小是："+getDocSize("index.txt"))
-title = getTitle(url)
-print("网页标题是：" + title)
-link = getLinks(url)
-getmysql(title,size,link)
+if __name__ == '__main__':
+    url = 'http://baike.baidu.com/item/Python'
+    file = nsfile(url)
+    title = getTitle(url)
+    print("网页标题是：" + title)
+    size = getDocSize(file)
+    size = str(size)
+    print("网页大小是：" + size+"b")
+    link = getLinks(url)
+    getmysql(title, size, link)

@@ -20,13 +20,19 @@ def getTitle(url):#获取网页标题
         return None
     return title
 
+link =set()#去重
 def getLinks(url):  #获取网页里所有的链接地址
+    global link
     website = urlopen(url)
     html = website.read()
     #use re.findall to get all the links
     r =  re.compile('"((http|ftp)s?://.*?)"')
     html=html.decode('utf-8')#python3
-    link = r.findall(html)
+    links = r.findall(html)
+    for li in links:
+        if li not in link:
+            new = li
+            link.add(new)
     if link==None:
         print("There is no link!")
     else:
